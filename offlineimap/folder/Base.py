@@ -411,9 +411,7 @@ class BaseFolder(object):
         for (passdesc, action) in passes:
             try:
                 action(dstfolder, statusfolder)
-            except (KeyboardInterrupt):
-                raise
-            except:
+            except Exception:
                 self.ui.warn("ERROR attempting to sync flags " \
                              + "for account " + self.getaccountname() \
                              + ":" + traceback.format_exc())

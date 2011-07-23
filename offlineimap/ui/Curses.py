@@ -106,13 +106,13 @@ class CursesUtil:
         try:
             curses.start_color()
             self.has_color = curses.has_colors()
-        except:
+        except Exception:
             self.has_color = 0
 
         self.oldcursor = None
         try:
             self.oldcursor = curses.curs_set(0)
-        except:
+        except Exception:
             pass
         
         self.stdscr.clear()
@@ -373,7 +373,8 @@ class Blinkenlights(BlinkenBase, UIBase):
         try:
             if not len(os.environ['TERM']):
                 return 0
-        except: return 0
+        except Exception:
+            return 0
 
         # ncurses doesn't want to start?  Can't use curses.
         # This test is nasty because initscr() actually EXITS on error.

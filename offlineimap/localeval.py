@@ -20,7 +20,7 @@
 import imp
 try:
     import errno
-except:
+except Exception:
     pass
 
 class LocalEval:

@@ -33,7 +33,7 @@ from offlineimap.CustomConfig import CustomConfigParser
 try:
     import fcntl
     hasfcntl = 1
-except:
+except ImportError:
     hasfcntl = 0
 
 lockfd = None
@@ -267,7 +267,7 @@ class OfflineImap:
             pidfd = open(config.getmetadatadir() + "/pid", "w")
             pidfd.write(str(os.getpid()) + "\n")
             pidfd.close()
-        except:
+        except Exception:
             pass
     
         try:
@@ -347,9 +347,7 @@ class OfflineImap:
         except KeyboardInterrupt:
             ui.terminate(1, errormsg = 'CTRL-C pressed, aborting...')
             return
-        except (SystemExit):
-            raise
-        except:
+        except Exception:
             ui.mainException()
 
     def sync_singlethreaded(self, accs, config):

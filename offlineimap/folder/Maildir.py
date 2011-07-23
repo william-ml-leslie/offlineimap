@@ -112,8 +112,8 @@ class MaildirFolder(BaseFolder):
         and must occur in ASCII order."""
         retval = {}
         files = []
-        nouidcounter = -1               # Messages without UIDs get
-                                        # negative UID numbers.
+        # Messages without UIDs get negative UID numbers
+        nouidcounter = -1
         foldermd5 = md5(self.getvisiblename()).hexdigest()
         folderstr = ',FMD5=' + foldermd5
         for dirannex in ['new', 'cur']:
@@ -125,8 +125,10 @@ class MaildirFolder(BaseFolder):
 
             #check if there is a parameter for maxage / maxsize - then see if this
             #message should be considered or not
-            maxage = self.config.getdefaultint("Account " + self.accountname, "maxage", -1)
-            maxsize = self.config.getdefaultint("Account " + self.accountname, "maxsize", -1)
+            maxage = self.config.getdefaultint(
+                "Account " + self.accountname, "maxage", -1)
+            maxsize = self.config.getdefaultint(
+                "Account " + self.accountname, "maxsize", -1)
 
             if(maxage != -1):
                 isnewenough = self._iswithinmaxage(messagename, maxage)
@@ -134,15 +136,14 @@ class MaildirFolder(BaseFolder):
                     #this message is older than we should consider....
                     continue
 
-            #Check and see if the message is too big if the maxsize for this account is set
+            # Check and see if the message is too big if the maxsize
+            # for this account is set
             if(maxsize != -1):
                 filesize = os.path.getsize(file)
                 if(filesize > maxsize):
                     continue
             
-
-            foldermatch = messagename.find(folderstr) != -1
-            if not foldermatch:
+            if folderstr not in messagename:
                 # If there is no folder MD5 specified, or if it mismatches,
                 # assume it is a foreign (new) message and generate a
                 # negative uid for it
@@ -170,8 +171,8 @@ class MaildirFolder(BaseFolder):
         """Returns True if the Maildir has changed"""
         self.cachemessagelist()
         # Folder has different uids than statusfolder => TRUE
-        if sorted(self.getmessageuidlist()) != \
-                sorted(statusfolder.getmessageuidlist()):
+        if set(self.getmessageuidlist()) != set(
+            statusfolder.getmessageuidlist()):
             return True
         # Also check for flag changes, it's quick on a Maildir 
         for (uid, message) in self.getmessagelist().iteritems():
@@ -220,13 +221,13 @@ class MaildirFolder(BaseFolder):
         # to give it a permanent home.
         tmpdir = os.path.join(self.getfullname(), 'tmp')
         timeval, timeseq = gettimeseq()
-        messagename = '%d_%d.%d.%s,U=%d,FMD5=%s' % \
-            (timeval,
-             timeseq,
-             os.getpid(),
-             socket.gethostname(),
-             uid,
-             md5(self.getvisiblename()).hexdigest())
+        messagename = '%d_%d.%d.%s,U=%d,FMD5=%s' % (
+            timeval,
+            timeseq,
+            os.getpid(),
+            socket.gethostname(),
+            uid,
+            md5(self.getvisiblename()).hexdigest())
         # open file and write it out
         try:
             fd = os.open(os.path.join(tmpdir, messagename),

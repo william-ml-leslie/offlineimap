@@ -145,9 +145,7 @@ class BaseRepository(object, CustomConfig.ConfigHelperMixin):
                     dest.makefolder(key)
                     for copyfolder in copyfolders:
                         copyfolder.makefolder(key.replace(dest.getsep(), copyfolder.getsep()))
-                except (KeyboardInterrupt):
-                    raise
-                except:
+                except Exception:
                     self.ui.warn("ERROR Attempting to create folder " \
                         + key + ":"  +traceback.format_exc())
 

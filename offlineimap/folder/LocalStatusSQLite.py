@@ -20,7 +20,7 @@ from threading import Lock
 from LocalStatus import LocalStatusFolder
 try:
     import sqlite3 as sqlite
-except:
+except ImportError:
     pass #fail only if needed later on, not on import
 
 class LocalStatusSQLiteFolder(LocalStatusFolder):

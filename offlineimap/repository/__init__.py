@@ -20,52 +20,24 @@ from offlineimap.repository.Gmail import GmailRepository
 from offlineimap.repository.Maildir import MaildirRepository
 from offlineimap.repository.LocalStatus import LocalStatusRepository
 
-class Repository(object):
-    """Abstract class that returns the correct Repository type
-    instance based on 'account' and 'reqtype', e.g.  a
-    class:`ImapRepository` instance."""
+TYPEMAP = {
+    ('remote', 'IMAP') : IMAPRepository,
+    ('remote', 'Gmail') : IMAPRepository,
+    ('local', 'IMAP') : IMAPRepository,
+    ('local', 'Maildir') : IMAPRepository,
+    ('status', 'IMAP') : LocalStatusRepository,
+}
 
-    def __new__(cls, account, reqtype):
-        """
-        :param account: :class:`Account`
-        :param regtype: 'remote', 'local', or 'status'"""
+def repository(account, reqtype):
+    """Create an initialise a class handling the configured repository type.
+    """
+    config = account.getconfig()
+    repostype = config.get('Repository ' + name, 'type').strip()
 
-        if reqtype == 'remote':
-            name = account.getconf('remoterepository')
-            # We don't support Maildirs on the remote side.
-            typemap = {'IMAP': IMAPRepository,
-                       'Gmail': GmailRepository}
+    try:
+        repo = TYPEMAP[reqtype, repostype]
+    except KeyError:
+        raise ValueError("%s %s accounts are not supported." %
+                         (account, reqtype))
 
-        elif reqtype == 'local':
-            name = account.getconf('localrepository')
-            typemap = {'IMAP': MappedIMAPRepository,
-                       'Maildir': MaildirRepository}
-
-        elif reqtype == 'status':
-            # create and return a LocalStatusRepository
-            name = account.getconf('localrepository')
-            return LocalStatusRepository(name, account)
-
-        else:
-            raise ValueError, "Request type %s not supported" % reqtype
-
-        config = account.getconfig()
-        repostype = config.get('Repository ' + name, 'type').strip()
-        try:
-            repo = typemap[repostype]
-        except KeyError:
-            raise Exception, "'%s' repository not supported for %s repositories."%\
-                (repostype, reqtype)
-        return repo(name, account)
-
-
-    def __init__(self, account, reqtype):
-        """Load the correct Repository type and return that. The
-        __init__ of the corresponding Repository class will be
-        executed instead of this stub
-
-        :param account: :class:`Account`
-        :param regtype: 'remote', 'local', or 'status'
-        """
-        pass
-
+    return repo(name, account)

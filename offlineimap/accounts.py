@@ -16,7 +16,7 @@
 #    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
 
 from offlineimap import mbnames, CustomConfig, OfflineImapError
-from offlineimap.repository import Repository
+from offlineimap.repository import repository
 from offlineimap.ui import getglobalui
 from offlineimap.threadutil import InstanceLimitedThread
 from subprocess import Popen, PIPE
@@ -165,9 +165,9 @@ class SyncableAccount(Account):
         if not os.path.exists(accountmetadata):
             os.mkdir(accountmetadata, 0700)            
 
-        self.remoterepos = Repository(self, 'remote')
-        self.localrepos  = Repository(self, 'local')
-        self.statusrepos = Repository(self, 'status')
+        self.remoterepos = repository(self, 'remote')
+        self.localrepos  = repository(self, 'local')
+        self.statusrepos = repository(self, 'status')
 
         # Loop account sync if needed (bail out after 3 failures)
         looping = 3
@@ -175,8 +175,6 @@ class SyncableAccount(Account):
             try:
                 try:
                     self.sync()
-                except (KeyboardInterrupt, SystemExit):
-                    raise
                 except OfflineImapError, e:                    
                     self.ui.warn(e.reason)
                     # Stop looping and bubble up Exception if needed.
@@ -185,7 +183,7 @@ class SyncableAccount(Account):
                             looping -= 1
                         if e.severity >= OfflineImapError.ERROR.CRITICAL:
                             raise
-                except:
+                except Exception:
                     self.ui.warn("Error occured attempting to sync account "\
                                  "'%s':\n%s"% (self, traceback.format_exc()))
                 else:
@@ -236,7 +234,7 @@ class SyncableAccount(Account):
 
             # iterate through all folders on the remote repo and sync
             for remotefolder in remoterepos.getfolders():
-                thread = InstanceLimitedThread(\
+                thread = InstanceLimitedThread(
                     instancename = 'FOLDER_' + self.remoterepos.getname(),
                     target = syncfolder,
                     name = "Folder sync [%s]" % self,
@@ -251,7 +249,7 @@ class SyncableAccount(Account):
             mbnames.write()
             localrepos.forgetfolders()
             remoterepos.forgetfolders()
-        except:
+        except Exception:
             #error while syncing. Drop all connections that we have, they
             #might be bogus by now (e.g. after suspend)
             localrepos.dropconnections()
@@ -276,7 +274,7 @@ class SyncableAccount(Account):
             r = p.communicate()
             self.ui.callhook("Hook stdout: %s\nHook stderr:%s\n" % r)
             self.ui.callhook("Hook return code: %d" % p.returncode)
-        except:
+        except Exception:
             self.ui.warn("Exception occured while calling hook")
 
 
@@ -288,14 +286,14 @@ def syncfolder(accountname, remoterepos, remotefolder, localrepos,
     ui.registerthread(accountname)
     try:
         # Load local folder.
-        localfolder = localrepos.\
-                      getfolder(remotefolder.getvisiblename().\
-                                replace(remoterepos.getsep(), localrepos.getsep()))
+        localfolder = localrepos.getfolder(
+            remotefolder.getvisiblename().
+            replace(remoterepos.getsep(), localrepos.getsep()))
         # Write the mailboxes
         mbnames.add(accountname, localfolder.getvisiblename())
 
         # Load status folder.
-        statusfolder = statusrepos.getfolder(remotefolder.getvisiblename().\
+        statusfolder = statusrepos.getfolder(remotefolder.getvisiblename().
                                              replace(remoterepos.getsep(),
                                                      statusrepos.getsep()))
         if localfolder.getuidvalidity() == None:
@@ -306,8 +304,8 @@ def syncfolder(accountname, remoterepos, remotefolder, localrepos,
         statusfolder.cachemessagelist()
 
         if quick:
-            if not localfolder.quickchanged(statusfolder) \
-                   and not remotefolder.quickchanged(statusfolder):
+            if (not localfolder.quickchanged(statusfolder)
+                and not remotefolder.quickchanged(statusfolder)):
                 ui.skippingfolder(remotefolder)
                 localrepos.restore_atime()
                 return
@@ -346,29 +344,27 @@ def syncfolder(accountname, remoterepos, remotefolder, localrepos,
             ui.syncingmessages(remoterepos, remotefolder, localrepos, localfolder)
             remotefolder.syncmessagesto(localfolder, statusfolder)
         else:
-            ui.debug('imap', "Not syncing to read-only repository '%s'" \
-                         % localrepos.getname())
+            ui.debug('imap', "Not syncing to read-only repository '%s'"
+                         % (localrepos.getname(),))
         
         # Synchronize local changes
         if not remoterepos.getconf('readonly', False):
             ui.syncingmessages(localrepos, localfolder, remoterepos, remotefolder)
             localfolder.syncmessagesto(remotefolder, statusfolder)
         else:
-            ui.debug('', "Not syncing to read-only repository '%s'" \
-                         % remoterepos.getname())
+            ui.debug('', "Not syncing to read-only repository '%s'"
+                         % (remoterepos.getname(),))
 
         statusfolder.save()
         localrepos.restore_atime()
-    except (KeyboardInterrupt, SystemExit):
-        raise
     except OfflineImapError, e:
         # bubble up severe Errors, skip folder otherwise
         if e.severity > OfflineImapError.ERROR.FOLDER:
             raise
         else:
-            ui.warn("Aborting folder sync '%s' [acc: '%s']\nReason was: %s" %\
+            ui.warn("Aborting folder sync '%s' [acc: '%s']\nReason was: %s" %
                         (localfolder.name, accountname, e.reason))
-    except:
-        ui.warn("ERROR in syncfolder for %s folder %s: %s" % \
+    except Exception:
+        ui.warn("ERROR in syncfolder for %s folder %s: %s" %
                 (accountname,remotefolder.getvisiblename(),
                  traceback.format_exc()))

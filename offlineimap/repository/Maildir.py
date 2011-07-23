@@ -78,10 +78,10 @@ class MaildirRepository(BaseRepository):
         # sanity tests
         if self.getsep() == '/':
             for component in foldername.split('/'):
-                assert not component in ['new', 'cur', 'tmp'],\
-                    "When using nested folders (/ as a Maildir separator), "\
-                    "folder names may not contain 'new', 'cur', 'tmp'."
-        assert foldername.find('../') == -1, "Folder names may not contain ../"
+                assert not component in ['new', 'cur', 'tmp'], (
+                    "When using nested folders (/ as a Maildir separator), "
+                    "folder names may not contain 'new', 'cur', 'tmp'.")
+        assert '../' not in foldername, "Folder names may not contain ../"
         assert not foldername.startswith('/'), "Folder names may not begin with /"
 
         # If we're using hierarchical folders, it's possible that
@@ -169,7 +169,7 @@ class MaildirRepository(BaseRepository):
             if self.getsep() == '/' and dirname != '.':
                 # Recursively check sub-directories for folders too.
                 retval.extend(self._getfolders_scandir(root, foldername))
-        self.debug("_GETFOLDERS_SCANDIR RETURNING %s" % \
+        self.debug("_GETFOLDERS_SCANDIR RETURNING %s" %
                    repr([x.getname() for x in retval]))
         return retval
     
