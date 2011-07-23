@@ -270,9 +270,7 @@ class BaseFolder(object):
                                       (uid,
                                        dstfolder.getvisiblename(),
                                        newuid))
-        except (KeyboardInterrupt):
-            raise
-        except:
+        except Exception:
             self.ui.warn("ERROR attempting to copy message " + str(uid) \
                  + " for account " + self.getaccountname() + ":" \
                  + traceback.format_exc())

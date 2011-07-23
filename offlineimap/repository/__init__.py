@@ -19,25 +19,31 @@ from offlineimap.repository.IMAP import IMAPRepository, MappedIMAPRepository
 from offlineimap.repository.Gmail import GmailRepository
 from offlineimap.repository.Maildir import MaildirRepository
 from offlineimap.repository.LocalStatus import LocalStatusRepository
+from offlineimap.repository.backup import BackupMaildirRepository
 
 TYPEMAP = {
     ('remote', 'IMAP') : IMAPRepository,
     ('remote', 'Gmail') : IMAPRepository,
     ('local', 'IMAP') : IMAPRepository,
     ('local', 'Maildir') : IMAPRepository,
-    ('status', 'IMAP') : LocalStatusRepository,
+    ('local', 'Backup') : BackupMaildirRepository,
 }
 
 def repository(account, reqtype):
     """Create an initialise a class handling the configured repository type.
     """
     config = account.getconfig()
+    if reqtype == 'status':
+        name = account.getconf('localrepository')
+        return LocalStatusRepository(name, account)
+
+    name = account.getconf(reqtype + 'repository')
     repostype = config.get('Repository ' + name, 'type').strip()
 
     try:
         repo = TYPEMAP[reqtype, repostype]
     except KeyError:
         raise ValueError("%s %s accounts are not supported." %
-                         (account, reqtype))
+                         (reqtype, repostype))
 
     return repo(name, account)

@@ -318,3 +318,20 @@ class MaildirFolder(BaseFolder):
             # Yep -- return.
         del(self.messagelist[uid])
         
+
+class BackupMaildirFolder(MaildirFolder):
+    def deletemessage(self, uid):
+        """No-op. Don't delete messages in a backup directory.
+        """
+        pass
+
+    def quickchanged(self):
+        """Backups don't have any change that you should know about.
+        """
+        return False
+
+    def syncmessagesto(self, dstfolder, statusfolder):
+        """No-op. Don't sync any of our changes back to the source.
+        """
+        pass
+
